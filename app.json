@@ -10,6 +10,9 @@
       }
     },
     "platforms": ["android"],
-    "sdkVersion": "50.0.0"
+    "sdkVersion": "50.0.0",
+    "android": {
+      "package": "com.khalyf.vacanisimo"
+    }
   }
 }
