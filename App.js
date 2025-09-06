@@ -1,137 +1,78 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, Button, StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, ScrollView, Alert } from 'react-native';
+import Constants from 'expo-constants';
 
 export default function App() {
   const [apiKey, setApiKey] = useState('');
-  const [savedKey, setSavedKey] = useState('');
-  const [showChat, setShowChat] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: '¡Hola! Soy Vacanísimo. ¿En qué puedo ayudarte hoy?' }
-  ]);
   const [input, setInput] = useState('');
-  const [autoMejora, setAutoMejora] = useState(false);
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Simulación sencilla para automejora (ficticia, real sería con lógica avanzada)
-  const handleSend = async () => {
-    let newMessages = [...messages, { role: 'user', content: input }];
-    setMessages(newMessages);
-
-    // Activar modo automejora
-    if (input.trim().toLowerCase() === 'automejora') {
-      setAutoMejora(true);
-      setInput('');
-      newMessages.push({ role: 'assistant', content: 'Modo automejora activado. Escribe tu sugerencia para mejorar la app.' });
-      setMessages([...newMessages]);
+  const sendPrompt = async () => {
+    if (!apiKey || !input) {
+      Alert.alert("¡Falta información!", "Debes ingresar tu clave OpenAI y una petición.");
       return;
     }
-
-    // Respuesta básica (simulación)
-    let response = 'Esta es una respuesta simulada. (Aquí irá la integración con OpenAI)';
-    if (autoMejora) {
-      response = `¡Gracias por tu sugerencia! La app mejorará pronto: "${input}"`;
-      setAutoMejora(false);
+    setLoading(true);
+    setResponse('');
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: "Eres un asistente que automejora apps y genera código React Native según instrucciones en español." },
+            { role: "user", content: input }
+          ],
+          max_tokens: 800
+        }),
+      });
+      const data = await res.json();
+      if (data.choices && data.choices[0]) {
+        setResponse(data.choices[0].message.content);
+      } else {
+        setResponse("Respuesta vacía o error: " + JSON.stringify(data));
+      }
+    } catch (e) {
+      setResponse("Error: " + e.message);
     }
-
-    setTimeout(() => {
-      setMessages([...newMessages, { role: 'assistant', content: response }]);
-      setInput('');
-    }, 700);
+    setLoading(false);
   };
 
-  if (!showChat) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>Vacanísimo</Text>
-        <Text style={styles.label}>Ingresa tu clave de OpenAI:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="sk-..."
-          value={apiKey}
-          onChangeText={setApiKey}
-          secureTextEntry
-        />
-        <Button
-          title="Guardar y continuar"
-          onPress={() => {
-            setSavedKey(apiKey);
-            setShowChat(true);
-          }}
-          disabled={!apiKey}
-        />
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.containerChat}>
-      <Text style={styles.title}>Vacanísimo Chat</Text>
-      <ScrollView
-        style={styles.chatArea}
-        contentContainerStyle={{ padding: 10 }}
-      >
-        {messages.map((msg, idx) => (
-          <View
-            key={idx}
-            style={[
-              styles.bubble,
-              msg.role === 'assistant' ? styles.bubbleBot : styles.bubbleUser
-            ]}
-          >
-            <Text style={{ color: msg.role === 'assistant' ? '#222' : '#fff' }}>{msg.content}</Text>
-          </View>
-        ))}
+    <View style={styles.container}>
+      <Text style={styles.title}>Vacanisimo 🤖</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Pega aquí tu clave de OpenAI"
+        secureTextEntry
+        value={apiKey}
+        onChangeText={setApiKey}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="¿Cómo quieres automejorar la app? Escribe aquí en español"
+        value={input}
+        onChangeText={setInput}
+        multiline
+      />
+      <Button title={loading ? "Enviando..." : "Enviar a OpenAI"} onPress={sendPrompt} disabled={loading} />
+      <ScrollView style={styles.response}>
+        <Text selectable>{response}</Text>
       </ScrollView>
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.inputChat}
-          placeholder="Escribe tu mensaje"
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={handleSend}
-        />
-        <Button title="Enviar" onPress={handleSend} disabled={!input} />
-      </View>
-      <Text style={styles.apiKeyInfo}>API Key: {savedKey ? 'Guardada' : 'No guardada'}</Text>
-    </SafeAreaView>
+      <Text style={styles.info}>Pide mejoras en español: “Automejóra tu diseño”, “hazte un editor de video”, “crea un juego”, etc.</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24,
-  },
-  containerChat: {
-    flex: 1, backgroundColor: '#f6f7fa', paddingTop: 40,
-  },
-  title: {
-    fontSize: 30, fontWeight: 'bold', marginBottom: 18, alignSelf: 'center'
-  },
-  label: {
-    fontSize: 17, marginBottom: 12, textAlign: 'center'
-  },
-  input: {
-    width: 260, padding: 12, borderWidth: 1, borderColor: '#888', borderRadius: 8, marginBottom: 16,
-    backgroundColor: '#fff'
-  },
-  chatArea: {
-    flex: 1, marginHorizontal: 10, marginBottom: 10, backgroundColor: '#eef1f5', borderRadius: 12
-  },
-  inputRow: {
-    flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginBottom: 16
-  },
-  inputChat: {
-    flex: 1, padding: 12, borderWidth: 1, borderColor: '#bbb', borderRadius: 8, backgroundColor: '#fff', marginRight: 8
-  },
-  bubble: {
-    marginVertical: 4, padding: 10, borderRadius: 10, maxWidth: '85%'
-  },
-  bubbleUser: {
-    backgroundColor: '#4f8ef7', alignSelf: 'flex-end'
-  },
-  bubbleBot: {
-    backgroundColor: '#fff', alignSelf: 'flex-start'
-  },
-  apiKeyInfo: {
-    fontSize: 12, color: '#888', alignSelf: 'center', marginBottom: 8
-  }
+  container: { flex: 1, padding: 24, backgroundColor: '#f9f9f9', paddingTop: Constants.statusBarHeight },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 18, textAlign: 'center' },
+  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 12, backgroundColor: '#fff' },
+  response: { marginTop: 16, backgroundColor: '#eee', borderRadius: 8, padding: 10, flex: 1 },
+  info: { color: '#888', marginTop: 10, fontSize: 12, textAlign: 'center' }
 });
