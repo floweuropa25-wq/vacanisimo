@@ -4,12 +4,6 @@
     "slug": "vacanisimo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -22,8 +16,10 @@
     "android": {
       "package": "com.khalyf.vacanisimo"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "extra": {
+      "eas": {
+        "projectId": "0ca0fe7b-624c-4748-8305-b9d350676f7d"
+      }
     }
   }
 }
