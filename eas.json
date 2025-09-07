@@ -2,15 +2,18 @@
   "build": {
     "development": {
       "android": {
-        "buildType": "apk"
-        ,"credentialsSource": "local"
+        "buildType": "apk",
+        "credentialsSource": "remote"
       }
     },
     "production": {
       "android": {
-        "buildType": "apk"
-        ,"credentialsSource": "local"
+        "buildType": "aab",
+        "credentialsSource": "remote"
       }
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
 }
