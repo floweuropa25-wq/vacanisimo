@@ -1,0 +1,16 @@
+{
+  "build": {
+    "development": {
+      "android": {
+        "buildType": "apk"
+        ,"credentialsSource": "local"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "apk"
+        ,"credentialsSource": "local"
+      }
+    }
+  }
+}
